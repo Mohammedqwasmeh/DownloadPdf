@@ -18,49 +18,28 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
     private val STORAGE_PERMISSION_CODE: Int = 1000
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         pdfDownloadBtn.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
-                        PackageManager.PERMISSION_DENIED
-                ) {
+                if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED)
                     requestPermissions(
-                            arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                            STORAGE_PERMISSION_CODE
+                        arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                        STORAGE_PERMISSION_CODE
                     )
-                } else {
-                    startDownloading()
-                }
-            } else {
-                startDownloading()
-            }
+                else startDownloading()
+            } else startDownloading()
         }
     }
 
-    override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<out String>,
-            grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             STORAGE_PERMISSION_CODE -> {
-                if (grantResults.isNotEmpty() && grantResults[0] ==
-                        PackageManager.PERMISSION_GRANTED
-                ) {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     startDownloading()
-                    Toast.makeText(
-                            this, "Permission Accepted !",
-                            Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    Toast.makeText(
-                            this, "Permission Denied !",
-                            Toast.LENGTH_SHORT
-                    ).show()
-                }
+                    Toast.makeText(this, "Permission Accepted !", Toast.LENGTH_SHORT).show()
+                } else Toast.makeText(this, "Permission Denied !", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -69,38 +48,23 @@ class MainActivity : AppCompatActivity() {
         val url = "https://books.goalkicker.com/AndroidBook/AndroidNotesForProfessionals.pdf"
         val request = DownloadManager.Request(Uri.parse(url))
         request.apply {
-            setAllowedNetworkTypes(
-                    DownloadManager.Request.NETWORK_WIFI or
-                            DownloadManager.Request.NETWORK_MOBILE
-            )
+            setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
             setTitle("PDF Book Download")
             setDescription("PDF Book Is Downloading...")
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            setDestinationInExternalPublicDir(
-                    Environment.DIRECTORY_DOWNLOADS,
-                    "${System.currentTimeMillis()}"
-            )
+            setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "${System.currentTimeMillis()}")
         }
-        val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as
-                DownloadManager
+        val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val downloadId = downloadManager.enqueue(request)
         val downloadManagerBroadcastReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                val intentDownloadId: Long? = intent?.getLongExtra(
-                        DownloadManager.EXTRA_DOWNLOAD_ID,
-                        -1
-                )
-                if (intentDownloadId == downloadId) {
-                    Toast.makeText(
-                            applicationContext, "PDF Book Download Completed !",
-                            Toast.LENGTH_SHORT
-                    ).show()
-                }
+            override fun onReceive(context: Context?, intent: Intent) {
+                val intentDownloadId: Long? = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+                if (intentDownloadId == downloadId) Toast.makeText(context, "PDF Book Download Completed !", Toast.LENGTH_SHORT).show()
             }
         }
         registerReceiver(
-                downloadManagerBroadcastReceiver,
-                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+            downloadManagerBroadcastReceiver,
+            IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
         )
     }
 }
